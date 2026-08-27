@@ -1,0 +1,304 @@
+/* Segmented Prompt Extension Styling */
+
+/* ========================================================= */
+/* 1. CRITICAL: Visibility & Hidden State Rules              */
+/* Any element hidden by Gradio MUST stay hidden at all times*/
+/* ========================================================= */
+.hidden,
+[hidden],
+.seg-row-panel.hidden,
+.seg-row-panel[hidden],
+.seg-row-panel[style*="display: none"],
+.seg-row-panel[style*="display:none"],
+.gradio-container .seg-row-panel.hidden,
+.gradio-container .seg-row-panel[hidden],
+.gradio-container .seg-row-panel[style*="display: none"],
+.gradio-container .seg-row-panel[style*="display:none"] {
+    display: none !important;
+}
+
+/* ========================================================= */
+/* 2. Base Segment Row Panel Styling                         */
+/* ========================================================= */
+.seg-row-panel {
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    position: relative;
+    border: 1px solid var(--border-color-primary, #374151) !important;
+    border-radius: 6px !important;
+    margin-bottom: 5px !important;
+    padding: 6px 8px !important;
+    background: var(--background-fill-secondary, #1f2937) !important;
+    box-sizing: border-box !important;
+}
+
+/* ========================================================= */
+/* 3. Controls / Action Column (Drag, Collapse, Delete)       */
+/* ========================================================= */
+.seg-order-btns {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+/* Expanded state: vertical column for controls */
+.seg-row-panel:not(.seg-collapsed) .seg-order-btns {
+    flex-direction: column !important;
+    gap: 4px !important;
+    min-width: 32px !important;
+    max-width: 36px !important;
+    width: 34px !important;
+    flex: 0 0 34px !important;
+}
+
+.seg-order-btns > .gradio-html,
+.seg-order-btns > div:has(.seg-controls-box) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.seg-controls-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.seg-row-panel:not(.seg-collapsed) .seg-controls-box {
+    flex-direction: column;
+}
+
+.seg-drag-handle {
+    cursor: grab;
+    font-size: 15px;
+    text-align: center;
+    padding: 2px;
+    line-height: 1;
+    user-select: none;
+    opacity: 0.75;
+    transition: opacity 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.seg-drag-handle:hover {
+    opacity: 1;
+}
+
+.seg-drag-handle:active {
+    cursor: grabbing;
+}
+
+.seg-collapse-btn {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    padding: 2px 3px !important;
+    border-radius: 3px !important;
+    opacity: 0.85;
+    transition: all 0.15s ease;
+    user-select: none;
+    color: var(--body-text-color, #e5e7eb) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0;
+    pointer-events: auto !important;
+}
+
+.seg-collapse-btn:hover {
+    opacity: 1;
+    background: var(--neutral-700, rgba(255, 255, 255, 0.15)) !important;
+}
+
+.seg-del-btn {
+    min-width: 22px !important;
+    max-width: 24px !important;
+    height: 22px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid var(--border-color-primary, #374151) !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+}
+
+.seg-del-btn:hover {
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: #ef4444 !important;
+}
+
+/* ========================================================= */
+/* 4. Expanded State                                         */
+/* ========================================================= */
+.seg-row-panel:not(.seg-collapsed) .seg-collapsed-summary,
+.seg-row-panel:not(.seg-collapsed) > .gradio-html:has(.seg-collapsed-summary),
+.seg-row-panel:not(.seg-collapsed) > div:has(.seg-collapsed-summary) {
+    display: none !important;
+}
+
+/* ========================================================= */
+/* 5. Collapsed State (Ultra-Compact Single-Line Bar)        */
+/* DO NOT set display: flex here to allow Gradio display:none*/
+/* ========================================================= */
+.seg-row-panel.seg-collapsed {
+    padding: 3px 6px !important;
+    min-height: 32px !important;
+    max-height: 34px !important;
+    height: 32px !important;
+    gap: 6px !important;
+    overflow: hidden !important;
+    align-items: center !important;
+    background: var(--background-fill-primary, #111827) !important;
+}
+
+/* Collapsed controls column: horizontal inline bar for ☰, ▶, 🗑️ */
+.seg-row-panel.seg-collapsed .seg-order-btns {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 3px !important;
+    min-width: 68px !important;
+    max-width: 72px !important;
+    width: 70px !important;
+    flex: 0 0 70px !important;
+    height: 100% !important;
+}
+
+.seg-row-panel.seg-collapsed .seg-controls-box {
+    flex-direction: row !important;
+    gap: 3px !important;
+}
+
+.seg-row-panel.seg-collapsed .seg-drag-handle {
+    font-size: 13px !important;
+    padding: 0 1px !important;
+}
+
+.seg-row-panel.seg-collapsed .seg-collapse-btn {
+    font-size: 10px !important;
+    padding: 1px 2px !important;
+}
+
+.seg-row-panel.seg-collapsed .seg-del-btn {
+    min-width: 20px !important;
+    max-width: 20px !important;
+    height: 20px !important;
+    font-size: 10px !important;
+    padding: 0 !important;
+}
+
+/* Hide form controls in collapsed mode */
+.seg-row-panel.seg-collapsed .seg-body-controls,
+.seg-row-panel.seg-collapsed .seg-weight-col,
+.seg-row-panel.seg-collapsed .segmented-prompt-textarea {
+    display: none !important;
+}
+
+/* Show single-line summary strip in collapsed mode */
+.seg-row-panel.seg-collapsed > .gradio-html:has(.seg-collapsed-summary),
+.seg-row-panel.seg-collapsed > div:has(.seg-collapsed-summary) {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    align-items: center !important;
+}
+
+.seg-row-panel.seg-collapsed .seg-collapsed-summary {
+    display: flex !important;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--body-text-color, #d1d5db);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    user-select: none;
+    padding: 2px 4px;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.seg-row-panel.seg-collapsed .seg-collapsed-summary:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.seg-summary-badge {
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 1.2;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--primary-500, #ea580c);
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.seg-summary-weight {
+    font-size: 10px;
+    line-height: 1.2;
+    padding: 1px 3px;
+    border-radius: 3px;
+    background: var(--neutral-700, #374151);
+    color: var(--neutral-200, #e5e7eb);
+    flex-shrink: 0;
+}
+
+.seg-summary-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--body-text-color-subdued, #9ca3af);
+    font-size: 12px;
+}
+
+/* ========================================================= */
+/* 6. Quick Action Toolbar                                   */
+/* ========================================================= */
+.seg-toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.seg-mini-tool-btn {
+    font-size: 12px !important;
+    padding: 2px 8px !important;
+    min-height: 24px !important;
+    border-radius: 4px !important;
+}
