@@ -51,17 +51,22 @@ class SegmentedPromptScript(scripts.Script):
                 for i in range(MAX_SEGMENTS):
 
                     with gr.Row(visible=(i < 3), variant="panel", elem_classes=["seg-row-panel"]) as row:
-                        with gr.Column(scale=1, min_width=36, elem_classes=["seg-order-btns"]):
-                            controls_html = gr.HTML(f'<div class="seg-controls-box"><span class="seg-drag-handle" title="Drag to reorder">☰</span><button type="button" class="seg-collapse-btn" data-seg-idx="{i}" data-prefix="{prefix}" title="Toggle Collapse/Expand">▼</button></div>')
+                        with gr.Column(scale=0, min_width=28, elem_classes=["seg-order-btns"]):
+                            controls_html = gr.HTML(
+                                f'<div class="seg-controls-box">'
+                                f'<span class="seg-drag-handle" title="Drag to reorder">☰</span>'
+                                f'<button type="button" class="seg-collapse-btn" data-seg-idx="{i}" data-prefix="{prefix}" title="Toggle Collapse/Expand">▼</button>'
+                                f'<button type="button" class="seg-translate-btn" data-seg-idx="{i}" data-prefix="{prefix}" title="Translate to English (Auto-detect)">🌐</button>'
+                                f'</div>'
+                            )
                             del_btn = gr.Button("🗑️", size="sm", elem_classes=["seg-del-btn"])
                         summary_html = gr.HTML('<div class="seg-collapsed-summary"></div>')
-                        with gr.Column(scale=2, min_width=120, elem_classes=["seg-body-controls", "seg-weight-col"]):
-                            with gr.Row():
-                                active_cb = gr.Checkbox(label="Active", value=True, elem_id=f"seg_active_{prefix}_{i}")
-                                locked_cb = gr.Checkbox(label="🔒 Lock", value=False, elem_id=f"seg_lock_{prefix}_{i}")
-                            weight_sl = gr.Slider(minimum=0.1, maximum=3.0, step=0.05, value=1.0, label="Weight", elem_id=f"seg_weight_{prefix}_{i}")
-                        with gr.Column(scale=10, elem_classes=["seg-body-controls"]):
-                            text_tb = gr.Textbox(label=f"Segment {i+1}", lines=2, placeholder="e.g. 1girl, highly detailed...", elem_classes=["segmented-prompt-textarea"], elem_id=f"seg_text_{prefix}_{i}")
+                        with gr.Column(scale=1, elem_classes=["seg-main-content", "seg-body-controls"]):
+                            with gr.Row(elem_classes=["seg-header-bar"]):
+                                active_cb = gr.Checkbox(label="Active", value=True, elem_id=f"seg_active_{prefix}_{i}", elem_classes=["seg-compact-cb"])
+                                locked_cb = gr.Checkbox(label="🔒 Lock", value=False, elem_id=f"seg_lock_{prefix}_{i}", elem_classes=["seg-compact-cb"])
+                                weight_sl = gr.Slider(minimum=0.1, maximum=3.0, step=0.05, value=1.0, label="Weight", elem_id=f"seg_weight_{prefix}_{i}", elem_classes=["seg-compact-slider"])
+                            text_tb = gr.Textbox(show_label=False, lines=2, placeholder=f"Segment {i+1} (e.g. 1girl, highly detailed...)", elem_classes=["segmented-prompt-textarea"], elem_id=f"seg_text_{prefix}_{i}")
 
                     segment_rows.append(row)
                     segment_inputs.extend([active_cb, locked_cb, weight_sl, text_tb])

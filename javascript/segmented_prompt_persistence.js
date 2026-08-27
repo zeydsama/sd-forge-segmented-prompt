@@ -94,6 +94,9 @@ onUiLoaded(function() {
                         if(text && typeof seg.text !== 'undefined' && text.value !== seg.text) {
                             text.value = seg.text;
                             text.dispatchEvent(new Event('input', {bubbles: true}));
+                            if (typeof window.autoResizeTextarea === 'function') {
+                                window.autoResizeTextarea(text);
+                            }
                         }
 
                         // Restore collapse state
@@ -108,6 +111,9 @@ onUiLoaded(function() {
             });
 
             hasRestored = true;
+            if (typeof window.autoResizeAllTextareas === 'function') {
+                window.autoResizeAllTextareas();
+            }
         } catch(e) { console.error("[Segmented Prompt] Restore Error: ", e); }
     }
 
@@ -140,6 +146,7 @@ onUiLoaded(function() {
             e.target.textContent.includes('Sync') ||
             e.target.textContent.includes('⬆️') ||
             e.target.classList.contains('seg-collapse-btn') ||
+            e.target.classList.contains('seg-translate-btn') ||
             e.target.classList.contains('seg-mini-tool-btn')
         )) {
             clearTimeout(saveTimeout);

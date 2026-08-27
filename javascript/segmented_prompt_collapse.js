@@ -1,5 +1,98 @@
 // segmented_prompt_collapse.js
 
+// Dynamic Auto-Adapt Textarea Height (Strictly multiline, NO running/single-line scrolling)
+function autoResizeTextarea(ta) {
+    if (!ta) return;
+    ta.style.height = 'auto';
+    const newHeight = Math.max(42, Math.min(280, ta.scrollHeight));
+    ta.style.height = newHeight + 'px';
+}
+
+function autoResizeAllTextareas(prefix) {
+    const prefixes = prefix ? [prefix] : ['txt2img', 'img2img'];
+    prefixes.forEach(p => {
+        const textareas = document.querySelectorAll(`#seg_sortable_wrapper_${p} .segmented-prompt-textarea textarea`);
+        textareas.forEach(ta => autoResizeTextarea(ta));
+    });
+}
+
+// Client-Side Google Translate (Free API, auto language detection -> English)
+async function translateSegmentText(prefix, idx, btn) {
+    const textEl = document.querySelector(`#seg_text_${prefix}_${idx} textarea`);
+    if (!textEl) return;
+
+    const rawText = textEl.value ? textEl.value.trim() : '';
+    if (!rawText) return;
+
+    const originalBtnContent = btn ? btn.textContent : '🌐';
+
+    if (btn) {
+        btn.textContent = '⏳';
+        btn.classList.add('seg-btn-loading');
+        btn.disabled = true;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=dict-chrome-ex&sl=auto&tl=en&dt=t&q=${encodeURIComponent(rawText)}`;
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`Translation API HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        let translatedText = '';
+
+        if (Array.isArray(data) && Array.isArray(data[0])) {
+            translatedText = data[0].map(chunk => (chunk && chunk[0] ? chunk[0] : '')).join('');
+        }
+
+        if (translatedText && translatedText.trim()) {
+            textEl.value = translatedText.trim();
+
+            // Dispatch bubbling events so Gradio state and persistence scripts capture the change
+            textEl.dispatchEvent(new Event('input', { bubbles: true }));
+            textEl.dispatchEvent(new Event('change', { bubbles: true }));
+
+            // Auto adapt the textarea height immediately after translation
+            autoResizeTextarea(textEl);
+
+            const row = textEl.closest('.seg-row-panel');
+            if (row) {
+                updateSegmentSummary(row, prefix, idx);
+            }
+
+            if (btn) {
+                btn.classList.remove('seg-btn-loading');
+                btn.textContent = '✅';
+                setTimeout(() => {
+                    btn.textContent = originalBtnContent;
+                }, 1200);
+            }
+            return;
+        }
+
+        throw new Error('Empty or invalid translation payload');
+    } catch (err) {
+        console.error('[Segmented Prompt] Translation error:', err);
+        if (btn) {
+            btn.classList.remove('seg-btn-loading');
+            btn.textContent = '❌';
+            setTimeout(() => {
+                btn.textContent = originalBtnContent;
+            }, 1500);
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+        }
+    }
+}
+
 function updateSegmentSummary(row, prefix, idx) {
     if (!row) return;
 
@@ -76,6 +169,11 @@ function setSegmentCollapsed(row, collapseBtn, isCollapsed, prefix, idx) {
             collapseBtn.textContent = '▼';
             collapseBtn.title = 'Collapse Segment';
         }
+        // Auto-adapt textarea height when expanding
+        const textEl = document.querySelector(`#seg_text_${prefix}_${idx} textarea`);
+        if (textEl) {
+            setTimeout(() => autoResizeTextarea(textEl), 20);
+        }
     }
 }
 
@@ -96,7 +194,18 @@ function bindRowEvents(wrapper, prefix) {
             });
         }
 
-        // 2. Click on summary strip expands segment
+        // 2. Translate button
+        const translateBtn = row.querySelector('.seg-translate-btn');
+        if (translateBtn && !translateBtn._translateBound) {
+            translateBtn._translateBound = true;
+            translateBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                translateSegmentText(prefix, i, translateBtn);
+            });
+        }
+
+        // 3. Click on summary strip expands segment
         const summaryStrip = row.querySelector('.seg-collapsed-summary');
         if (summaryStrip && !summaryStrip._expandBound) {
             summaryStrip._expandBound = true;
@@ -108,22 +217,36 @@ function bindRowEvents(wrapper, prefix) {
             });
         }
 
-        // 3. Delete button: refresh summaries
+        // 4. Delete button: refresh summaries and auto-resize
         const delBtn = row.querySelector('.seg-del-btn');
         if (delBtn && !delBtn._delBound) {
             delBtn._delBound = true;
             delBtn.addEventListener('click', () => {
-                setTimeout(() => refreshAllSummaries(prefix), 150);
-                setTimeout(() => refreshAllSummaries(prefix), 400);
+                setTimeout(() => {
+                    refreshAllSummaries(prefix);
+                    autoResizeAllTextareas(prefix);
+                }, 150);
+                setTimeout(() => {
+                    refreshAllSummaries(prefix);
+                    autoResizeAllTextareas(prefix);
+                }, 400);
             });
         }
 
-        // 4. Update summary on input
+        // 5. Update summary & auto-adapt height on input
         const textEl = document.querySelector(`#seg_text_${prefix}_${i} textarea`);
         if (textEl && !textEl._summaryBound) {
             textEl._summaryBound = true;
-            textEl.addEventListener('input', () => updateSegmentSummary(row, prefix, i));
-            textEl.addEventListener('change', () => updateSegmentSummary(row, prefix, i));
+            textEl.addEventListener('input', () => {
+                autoResizeTextarea(textEl);
+                updateSegmentSummary(row, prefix, i);
+            });
+            textEl.addEventListener('change', () => {
+                autoResizeTextarea(textEl);
+                updateSegmentSummary(row, prefix, i);
+            });
+            // Initial resize
+            autoResizeTextarea(textEl);
         }
 
         const weightEl = document.querySelector(`#seg_weight_${prefix}_${i} input`);
@@ -153,6 +276,7 @@ function initSegmentCollapse() {
         if (!wrapper) return;
 
         bindRowEvents(wrapper, prefix);
+        autoResizeAllTextareas(prefix);
 
         // Global Toolbar: Collapse All
         const collapseAllBtn = document.querySelector(`#seg_collapse_all_${prefix}`);
@@ -186,6 +310,7 @@ function initSegmentCollapse() {
                         setSegmentCollapsed(r, btn, false, prefix, idx);
                     }
                 });
+                autoResizeAllTextareas(prefix);
                 document.dispatchEvent(new CustomEvent('seg-state-changed'));
             });
         }
@@ -200,3 +325,6 @@ onUiLoaded(function() {
 window.setSegmentCollapsed = setSegmentCollapsed;
 window.updateSegmentSummary = updateSegmentSummary;
 window.refreshAllSummaries = refreshAllSummaries;
+window.autoResizeTextarea = autoResizeTextarea;
+window.autoResizeAllTextareas = autoResizeAllTextareas;
+window.translateSegmentText = translateSegmentText;

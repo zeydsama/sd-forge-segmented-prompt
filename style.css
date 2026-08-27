@@ -25,14 +25,14 @@
     position: relative;
     border: 1px solid var(--border-color-primary, #374151) !important;
     border-radius: 6px !important;
-    margin-bottom: 5px !important;
-    padding: 6px 8px !important;
+    margin-bottom: 4px !important;
+    padding: 4px 6px !important;
     background: var(--background-fill-secondary, #1f2937) !important;
     box-sizing: border-box !important;
 }
 
 /* ========================================================= */
-/* 3. Controls / Action Column (Drag, Collapse, Delete)       */
+/* 3. Controls / Action Column (Drag, Collapse, Translate, Del)*/
 /* ========================================================= */
 .seg-order-btns {
     display: flex !important;
@@ -48,11 +48,12 @@
 /* Expanded state: vertical column for controls */
 .seg-row-panel:not(.seg-collapsed) .seg-order-btns {
     flex-direction: column !important;
-    gap: 4px !important;
-    min-width: 32px !important;
-    max-width: 36px !important;
-    width: 34px !important;
-    flex: 0 0 34px !important;
+    gap: 3px !important;
+    min-width: 26px !important;
+    max-width: 28px !important;
+    width: 26px !important;
+    flex: 0 0 26px !important;
+    margin-right: 4px !important;
 }
 
 .seg-order-btns > .gradio-html,
@@ -76,13 +77,14 @@
 
 .seg-row-panel:not(.seg-collapsed) .seg-controls-box {
     flex-direction: column;
+    gap: 3px;
 }
 
 .seg-drag-handle {
     cursor: grab;
-    font-size: 15px;
+    font-size: 14px;
     text-align: center;
-    padding: 2px;
+    padding: 1px;
     line-height: 1;
     user-select: none;
     opacity: 0.75;
@@ -108,7 +110,7 @@
     cursor: pointer !important;
     font-size: 11px !important;
     line-height: 1 !important;
-    padding: 2px 3px !important;
+    padding: 2px !important;
     border-radius: 3px !important;
     opacity: 0.85;
     transition: all 0.15s ease;
@@ -126,14 +128,51 @@
     background: var(--neutral-700, rgba(255, 255, 255, 0.15)) !important;
 }
 
+.seg-translate-btn {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    padding: 2px !important;
+    border-radius: 3px !important;
+    opacity: 0.85;
+    transition: all 0.15s ease;
+    user-select: none;
+    color: var(--body-text-color, #e5e7eb) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0;
+    pointer-events: auto !important;
+}
+
+.seg-translate-btn:hover {
+    opacity: 1;
+    background: var(--neutral-700, rgba(255, 255, 255, 0.15)) !important;
+    transform: scale(1.1);
+}
+
+.seg-translate-btn.seg-btn-loading {
+    cursor: wait !important;
+    opacity: 0.7 !important;
+    animation: segPulse 1s infinite alternate;
+}
+
+@keyframes segPulse {
+    from { transform: scale(0.95); opacity: 0.5; }
+    to { transform: scale(1.05); opacity: 1; }
+}
+
 .seg-del-btn {
-    min-width: 22px !important;
-    max-width: 24px !important;
-    height: 22px !important;
+    min-width: 20px !important;
+    max-width: 22px !important;
+    height: 20px !important;
     padding: 0 !important;
     margin: 0 !important;
-    font-size: 11px !important;
-    border-radius: 4px !important;
+    font-size: 10px !important;
+    border-radius: 3px !important;
     line-height: 1 !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -151,7 +190,7 @@
 }
 
 /* ========================================================= */
-/* 4. Expanded State                                         */
+/* 4. Expanded State & Main Content Layout                   */
 /* ========================================================= */
 .seg-row-panel:not(.seg-collapsed) .seg-collapsed-summary,
 .seg-row-panel:not(.seg-collapsed) > .gradio-html:has(.seg-collapsed-summary),
@@ -159,9 +198,157 @@
     display: none !important;
 }
 
+.seg-main-content {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    gap: 3px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Top Header Bar inside segment card */
+.seg-header-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 20px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Compact Checkboxes in Header Bar */
+.seg-compact-cb {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+}
+
+.seg-compact-cb label {
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+.seg-compact-cb label span {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: var(--body-text-color, #e5e7eb) !important;
+}
+
+.seg-compact-cb input[type="checkbox"] {
+    margin: 0 !important;
+    cursor: pointer !important;
+    width: 14px !important;
+    height: 14px !important;
+}
+
+/* Compact Weight Slider in Header Bar */
+.seg-compact-slider {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 0 0 auto !important;
+    min-height: 0 !important;
+    min-width: 130px !important;
+    max-width: 220px !important;
+    flex: 0 1 200px !important;
+}
+
+.seg-compact-slider .head,
+.seg-compact-slider label {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.seg-compact-slider .head span:first-child,
+.seg-compact-slider label > span:first-child {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: var(--body-text-color-subdued, #9ca3af) !important;
+}
+
+.seg-compact-slider input[type="number"] {
+    width: 44px !important;
+    height: 20px !important;
+    font-size: 11px !important;
+    padding: 1px 4px !important;
+    text-align: center !important;
+    border-radius: 3px !important;
+    border: 1px solid var(--border-color-primary, #374151) !important;
+    background: var(--input-background-fill, #111827) !important;
+}
+
+.seg-compact-slider input[type="range"] {
+    height: 4px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    accent-color: var(--primary-500, #ea580c) !important;
+}
+
 /* ========================================================= */
-/* 5. Collapsed State (Ultra-Compact Single-Line Bar)        */
-/* DO NOT set display: flex here to allow Gradio display:none*/
+/* 5. Auto-Adapting Multiline Prompt Textarea (NO RUNNING TEXT)*/
+/* ========================================================= */
+.segmented-prompt-textarea {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+}
+
+.segmented-prompt-textarea > label {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+.segmented-prompt-textarea textarea {
+    width: 100% !important;
+    min-height: 42px !important;
+    max-height: 280px !important;
+    height: auto;
+    padding: 4px 6px !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    border-radius: 4px !important;
+    border: 1px solid var(--border-color-primary, #374151) !important;
+    background: var(--input-background-fill, #111827) !important;
+    color: var(--body-text-color, #e5e7eb) !important;
+    box-sizing: border-box !important;
+    resize: vertical !important;
+
+    /* CRITICAL: Auto-wrapping and multiline handling - strictly NO single-line scrolling / running text */
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    overflow-y: auto !important;
+}
+
+.segmented-prompt-textarea textarea:focus {
+    border-color: var(--primary-500, #ea580c) !important;
+    outline: none !important;
+}
+
+/* ========================================================= */
+/* 6. Collapsed State (Ultra-Compact Single-Line Bar)        */
 /* ========================================================= */
 .seg-row-panel.seg-collapsed {
     padding: 3px 6px !important;
@@ -186,6 +373,7 @@
     width: 70px !important;
     flex: 0 0 70px !important;
     height: 100% !important;
+    margin-right: 0 !important;
 }
 
 .seg-row-panel.seg-collapsed .seg-controls-box {
@@ -203,6 +391,11 @@
     padding: 1px 2px !important;
 }
 
+/* Hide translate button in collapsed summary mode */
+.seg-row-panel.seg-collapsed .seg-translate-btn {
+    display: none !important;
+}
+
 .seg-row-panel.seg-collapsed .seg-del-btn {
     min-width: 20px !important;
     max-width: 20px !important;
@@ -212,6 +405,7 @@
 }
 
 /* Hide form controls in collapsed mode */
+.seg-row-panel.seg-collapsed .seg-main-content,
 .seg-row-panel.seg-collapsed .seg-body-controls,
 .seg-row-panel.seg-collapsed .seg-weight-col,
 .seg-row-panel.seg-collapsed .segmented-prompt-textarea {
@@ -287,7 +481,7 @@
 }
 
 /* ========================================================= */
-/* 6. Quick Action Toolbar                                   */
+/* 7. Quick Action Toolbar                                   */
 /* ========================================================= */
 .seg-toolbar-row {
     display: flex;

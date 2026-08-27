@@ -57,6 +57,9 @@ onUiLoaded(function() {
                     currentVal += textToAdd;
                     seg1.value = currentVal;
                     seg1.dispatchEvent(new Event('input', { bubbles: true }));
+                    if (typeof window.autoResizeTextarea === 'function') {
+                        window.autoResizeTextarea(seg1);
+                    }
 
                     if (textToAddNegative && textToAddNegative.length > 0) {
                         const negPrompt = document.querySelector("#" + tabname + "_neg_prompt > label > textarea");
@@ -179,6 +182,9 @@ onUiLoaded(function() {
                             setTimeout(() => {
                                 if (typeof window.refreshAllSummaries === 'function') {
                                     window.refreshAllSummaries(tab);
+                                }
+                                if (typeof window.autoResizeAllTextareas === 'function') {
+                                    window.autoResizeAllTextareas(tab);
                                 }
                             }, 200);
 

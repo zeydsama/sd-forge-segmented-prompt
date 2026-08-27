@@ -5,7 +5,9 @@ An extension for [Stable Diffusion WebUI Forge](https://github.com/lllyasviel/st
 ## Features
 
 - 🧩 **Segmented Prompt Builder**: Build complex prompts across up to 10 distinct segments.
-- 🎚️ **Per-Segment Weight & Toggle**: Enable/disable individual segments and adjust weights with sliders.
+- 🌐 **One-Click Translation**: Instant Google Translate integration (`🌐`) per segment with auto-detection to English (e.g. Indonesian to English) and live status feedback.
+- 📐 **Auto-Adapting Textboxes**: Textboxes dynamically expand and shrink with content height with full multi-line text wrapping (no horizontal scrolling or running text).
+- 🎚️ **Ultra-Compact Controls**: Streamlined top header layout for `Active`, `🔒 Lock`, and `Weight` slider to maximize prompt workspace.
 - 🔒 **Segment Locking**: Lock specific segments to protect them during syncs and reordering.
 - 🔄 **Bidirectional Sync**:
   - **Sync from Main Prompt**: Parses raw prompt strings (split by `;` or multiple newlines/commas) into segment blocks with weights.
