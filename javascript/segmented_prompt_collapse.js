@@ -288,12 +288,28 @@ function bindRowEvents(wrapper, prefix) {
             autoResizeTextarea(textEl);
         }
 
-        const weightEl = document.querySelector(`#seg_weight_${prefix}_${i} input`);
-        if (weightEl && !weightEl._summaryBound) {
-            weightEl._summaryBound = true;
-            weightEl.addEventListener('input', () => updateSegmentSummary(row, prefix, i));
-            weightEl.addEventListener('change', () => updateSegmentSummary(row, prefix, i));
-        }
+        const weightInputs = row.querySelectorAll(`[id*="seg_weight_${prefix}_${i}"] input`);
+        weightInputs.forEach(input => {
+            input.setAttribute('min', '0');
+            input.min = '0';
+            if (!input._summaryBound) {
+                input._summaryBound = true;
+                input.addEventListener('input', () => {
+                    if (input.min !== '0') {
+                        input.min = '0';
+                        input.setAttribute('min', '0');
+                    }
+                    updateSegmentSummary(row, prefix, i);
+                });
+                input.addEventListener('change', () => {
+                    if (input.min !== '0') {
+                        input.min = '0';
+                        input.setAttribute('min', '0');
+                    }
+                    updateSegmentSummary(row, prefix, i);
+                });
+            }
+        });
 
         const activeEl = document.querySelector(`#seg_active_${prefix}_${i} input`);
         if (activeEl && !activeEl._summaryBound) {
@@ -356,9 +372,40 @@ function initSegmentCollapse() {
     });
 }
 
+function fixWeightSliders() {
+    document.querySelectorAll('[id*="seg_weight_"] input').forEach(input => {
+        if (input.getAttribute('min') !== '0' || input.min !== '0') {
+            input.setAttribute('min', '0');
+            input.min = '0';
+        }
+    });
+}
+
+document.addEventListener('pointerdown', (e) => {
+    if (e.target && e.target.closest('[id*="seg_weight_"]')) {
+        fixWeightSliders();
+    }
+}, true);
+
+document.addEventListener('focusin', (e) => {
+    if (e.target && e.target.closest('[id*="seg_weight_"]')) {
+        fixWeightSliders();
+    }
+}, true);
+
 onUiLoaded(function() {
-    setTimeout(initSegmentCollapse, 1000);
-    setTimeout(initSegmentCollapse, 2500);
+    setTimeout(() => {
+        fixWeightSliders();
+        initSegmentCollapse();
+    }, 500);
+    setTimeout(() => {
+        fixWeightSliders();
+        initSegmentCollapse();
+    }, 1500);
+    setTimeout(() => {
+        fixWeightSliders();
+        initSegmentCollapse();
+    }, 3000);
 });
 
 window.setSegmentCollapsed = setSegmentCollapsed;
@@ -367,3 +414,4 @@ window.refreshAllSummaries = refreshAllSummaries;
 window.autoResizeTextarea = autoResizeTextarea;
 window.autoResizeAllTextareas = autoResizeAllTextareas;
 window.translateSegmentText = translateSegmentText;
+window.fixWeightSliders = fixWeightSliders;

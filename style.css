@@ -212,6 +212,7 @@
 .seg-header-bar {
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
     gap: 10px !important;
     min-height: 20px !important;
