@@ -109,20 +109,59 @@ function updateSegmentSummary(row, prefix, idx) {
     const lockEl = document.querySelector(`#seg_lock_${prefix}_${idx} input[type="checkbox"]`);
 
     const textVal = textEl ? textEl.value.trim() : '';
-    const weightVal = weightEl ? parseFloat(weightEl.value).toFixed(2).replace(/\.?0+$/, '') : '1';
+    let parsedWeight = 1.0;
+    let weightVal = '1';
+    if (weightEl) {
+        parsedWeight = parseFloat(weightEl.value);
+        if (isNaN(parsedWeight)) {
+            parsedWeight = 1.0;
+            weightVal = '1';
+        } else if (Math.abs(parsedWeight) < 0.001) {
+            parsedWeight = 0;
+            weightVal = '0';
+        } else {
+            weightVal = parsedWeight.toFixed(2).replace(/\.?0+$/, '');
+        }
+    }
     const isActive = activeEl ? activeEl.checked : true;
     const isLocked = lockEl ? lockEl.checked : false;
+    const isZeroWeight = (parsedWeight === 0);
+
+    // Toggle zero-weight class on row for visual feedback in both collapsed & expanded states
+    if (isZeroWeight && isActive) {
+        row.classList.add('seg-zero-weight');
+    } else {
+        row.classList.remove('seg-zero-weight');
+    }
 
     let badgeText = `Seg ${parseInt(idx) + 1}`;
     if (isLocked) badgeText += ' 🔒';
-    if (!isActive) badgeText += ' (Off)';
+    if (!isActive) {
+        badgeText += ' (Off)';
+    } else if (isZeroWeight) {
+        badgeText += ' (Ghost: 0%)';
+    }
 
     const displaySnippet = textVal.length > 0 ? textVal : '<empty>';
 
+    let badgeBgStyle = '';
+    if (!isActive) {
+        badgeBgStyle = 'background: #6b7280;';
+    } else if (isZeroWeight) {
+        badgeBgStyle = 'background: #475569; border: 1px dashed #94a3b8; color: #cbd5e1;';
+    }
+
+    let weightStyle = '';
+    let textStyle = '';
+    if (isZeroWeight && isActive) {
+        weightStyle = 'opacity: 0.6; text-decoration: line-through;';
+        textStyle = 'opacity: 0.7; font-style: italic;';
+    }
+
     summaryEl.innerHTML = `
-        <span class="seg-summary-badge" style="${!isActive ? 'background: #6b7280;' : ''}">${badgeText}</span>
-        <span class="seg-summary-weight">${weightVal}x</span>
-        <span class="seg-summary-text" title="${escapeHtml(textVal)}">${escapeHtml(displaySnippet)}</span>
+        <span class="seg-summary-badge" style="${badgeBgStyle}">${badgeText}</span>
+        <span class="seg-summary-weight" style="${weightStyle}">${weightVal}x</span>
+        <span class="seg-summary-text" style="${textStyle}" title="${escapeHtml(textVal)}">${escapeHtml(displaySnippet)}</span>
     `;
 }
 

@@ -8,6 +8,7 @@ An extension for [Stable Diffusion WebUI Forge](https://github.com/lllyasviel/st
 - 🌐 **One-Click Translation**: Instant Google Translate integration (`🌐`) per segment with auto-detection to English (e.g. Indonesian to English) and live status feedback.
 - 📐 **Auto-Adapting Textboxes**: Textboxes dynamically expand and shrink with content height with full multi-line text wrapping (no horizontal scrolling or running text).
 - 🎚️ **Ultra-Compact Controls**: Streamlined top header layout for `Active`, `🔒 Lock`, and `Weight` slider to maximize prompt workspace.
+- 👻 **Ghost / Muted Segments (Weight = 0)**: Slide weight down to `0.0` to retain prompt segments in infotext/metadata (`(text:0)`) and card storage with literally 0.0% effect on inference (completely excluded during sampling).
 - 🔒 **Segment Locking**: Lock specific segments to protect them during syncs and reordering.
 - 🔄 **Bidirectional Sync**:
   - **Sync from Main Prompt**: Parses raw prompt strings (split by `;` or multiple newlines/commas) into segment blocks with weights.

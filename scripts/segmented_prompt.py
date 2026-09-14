@@ -2,6 +2,20 @@ import modules.scripts as scripts
 import gradio as gr
 import re
 
+RE_ZERO_WEIGHT_TAG = re.compile(
+    r',\s*\([^:\(\)]+:\s*0(?:\.0+)?\s*\)'
+    r'|\([^:\(\)]+:\s*0(?:\.0+)?\s*\)\s*,?'
+    r'|\([^:\(\)]+:\s*0(?:\.0+)?\s*\)'
+)
+
+def clean_zero_weight_tags(text):
+    if not text:
+        return ""
+    cleaned = RE_ZERO_WEIGHT_TAG.sub('', text)
+    cleaned = re.sub(r',\s*,+', ', ', cleaned)
+    cleaned = re.sub(r'^[,\s]+|[,\s]+$', '', cleaned)
+    return cleaned.strip()
+
 class SegmentedPromptScript(scripts.Script):
     def __init__(self):
         self.txt2img_prompt_tb = None
@@ -65,7 +79,7 @@ class SegmentedPromptScript(scripts.Script):
                             with gr.Row(elem_classes=["seg-header-bar"]):
                                 active_cb = gr.Checkbox(label="Active", value=True, elem_id=f"seg_active_{prefix}_{i}", elem_classes=["seg-compact-cb"])
                                 locked_cb = gr.Checkbox(label="🔒 Lock", value=False, elem_id=f"seg_lock_{prefix}_{i}", elem_classes=["seg-compact-cb"])
-                                weight_sl = gr.Slider(minimum=0.1, maximum=3.0, step=0.05, value=1.0, label="Weight", elem_id=f"seg_weight_{prefix}_{i}", elem_classes=["seg-compact-slider"])
+                                weight_sl = gr.Slider(minimum=0.0, maximum=3.0, step=0.05, value=1.0, label="Weight", elem_id=f"seg_weight_{prefix}_{i}", elem_classes=["seg-compact-slider"])
                             text_tb = gr.Textbox(show_label=False, lines=2, placeholder=f"Segment {i+1} (e.g. 1girl, highly detailed...)", elem_classes=["segmented-prompt-textarea"], elem_id=f"seg_text_{prefix}_{i}")
 
                     segment_rows.append(row)
@@ -244,7 +258,9 @@ class SegmentedPromptScript(scripts.Script):
                     text = states[i+3]
                     if active and text and text.strip():
                         clean_text = text.strip()
-                        if abs(weight - 1.0) < 0.001:
+                        if abs(weight) < 0.001:
+                            valid_segments.append(f"({clean_text}:0)")
+                        elif abs(weight - 1.0) < 0.001:
                             valid_segments.append(clean_text)
                         else:
                             valid_segments.append(f"({clean_text}:{weight})")
@@ -290,7 +306,8 @@ class SegmentedPromptScript(scripts.Script):
         if type(p.all_prompts) is list:
             p.all_prompts = [""] * len(p.all_prompts)
 
-        valid_segments = []
+        infotext_segments = []
+        sampling_segments = []
         for i in range(0, len(args), 4):
             active = args[i]
             # locked = args[i+1] # We dont need it during processing
@@ -299,13 +316,46 @@ class SegmentedPromptScript(scripts.Script):
 
             if active and text and text.strip():
                 clean_text = text.strip()
-                if abs(weight - 1.0) < 0.001:
-                    valid_segments.append(clean_text)
+                if abs(weight) < 0.001:
+                    # Weight 0: Ghost segment! Retained in metadata/infotext as (text:0), excluded from inference sampling!
+                    infotext_segments.append(f"({clean_text}:0)")
+                elif abs(weight - 1.0) < 0.001:
+                    infotext_segments.append(clean_text)
+                    clean_sampling = clean_zero_weight_tags(clean_text)
+                    if clean_sampling:
+                        sampling_segments.append(clean_sampling)
                 else:
-                    valid_segments.append(f"({clean_text}:{weight})")
+                    formatted = f"({clean_text}:{weight})"
+                    infotext_segments.append(formatted)
+                    clean_sampling = clean_zero_weight_tags(clean_text)
+                    if clean_sampling:
+                        sampling_segments.append(f"({clean_sampling}:{weight})")
 
-        if valid_segments:
-            new_prompt = "\n\n,".join(valid_segments)
-            p.prompt = new_prompt
-            if type(p.all_prompts) is list:
-                p.all_prompts = [new_prompt] * len(p.all_prompts)
+        infotext_prompt = "\n\n,".join(infotext_segments) if infotext_segments else ""
+        sampling_prompt = "\n\n,".join(sampling_segments) if sampling_segments else ""
+
+        p.prompt = infotext_prompt
+        if type(p.all_prompts) is list:
+            p.all_prompts = [infotext_prompt] * len(p.all_prompts)
+        if hasattr(p, "main_prompt"):
+            p.main_prompt = infotext_prompt
+
+        p._segmented_prompt_clean = sampling_prompt
+
+    def before_process_batch(self, p, is_enabled, *args, **kwargs):
+        if not is_enabled:
+            return
+        if hasattr(p, "_segmented_prompt_clean"):
+            clean_prompt = p._segmented_prompt_clean
+            for i in range(len(p.prompts)):
+                p.prompts[i] = clean_prompt
+
+    def before_hr(self, p, is_enabled, *args):
+        if not is_enabled:
+            return
+        if hasattr(p, "_segmented_prompt_clean"):
+            clean_prompt = p._segmented_prompt_clean
+            if hasattr(p, "all_hr_prompts") and p.all_hr_prompts:
+                p.all_hr_prompts = [clean_prompt] * len(p.all_hr_prompts)
+            if hasattr(p, "hr_prompts") and p.hr_prompts:
+                p.hr_prompts = [clean_prompt] * len(p.hr_prompts)

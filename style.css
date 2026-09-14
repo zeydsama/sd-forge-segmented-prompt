@@ -496,3 +496,18 @@
     min-height: 24px !important;
     border-radius: 4px !important;
 }
+
+/* ========================================================= */
+/* 8. Zero-Weight / Ghost Muted Card Styling                */
+/* ========================================================= */
+.seg-row-panel.seg-zero-weight {
+    border-color: rgba(148, 163, 184, 0.35) !important;
+    border-style: dashed !important;
+    background: rgba(30, 41, 59, 0.45) !important;
+}
+
+.seg-row-panel.seg-zero-weight .segmented-prompt-textarea textarea {
+    color: var(--body-text-color-subdued, #9ca3af) !important;
+    font-style: italic !important;
+}
+

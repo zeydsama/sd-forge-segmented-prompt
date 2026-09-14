@@ -114,6 +114,9 @@ onUiLoaded(function() {
             if (typeof window.autoResizeAllTextareas === 'function') {
                 window.autoResizeAllTextareas();
             }
+            if (typeof window.refreshAllSummaries === 'function') {
+                window.refreshAllSummaries();
+            }
         } catch(e) { console.error("[Segmented Prompt] Restore Error: ", e); }
     }
 
