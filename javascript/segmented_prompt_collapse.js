@@ -16,7 +16,24 @@ function autoResizeAllTextareas(prefix) {
     });
 }
 
-// Client-Side Google Translate (Free API, auto language detection -> English)
+// Helper to fetch translation from Google Translate
+async function fetchGoogleTranslate(text, sl = 'auto', tl = 'en', signal) {
+    if (!text || !text.trim()) return { text: '', lang: 'unknown' };
+    const url = `https://translate.googleapis.com/translate_a/single?client=dict-chrome-ex&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+    const response = await fetch(url, { signal });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+    const data = await response.json();
+    let translated = '';
+    if (Array.isArray(data) && Array.isArray(data[0])) {
+        translated = data[0].map(chunk => (chunk && chunk[0] ? chunk[0] : '')).join('');
+    }
+    const lang = (data && data[2]) ? data[2] : 'unknown';
+    return { text: translated.trim(), lang };
+}
+
+// Client-Side Smart Google Translate (Auto-detection, clause chunking & mixed-language fallback -> English)
 async function translateSegmentText(prefix, idx, btn) {
     const textEl = document.querySelector(`#seg_text_${prefix}_${idx} textarea`);
     if (!textEl) return;
@@ -33,26 +50,65 @@ async function translateSegmentText(prefix, idx, btn) {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
-        const url = `https://translate.googleapis.com/translate_a/single?client=dict-chrome-ex&sl=auto&tl=en&dt=t&q=${encodeURIComponent(rawText)}`;
-        const response = await fetch(url, { signal: controller.signal });
+        let finalTranslated = '';
+
+        // Pass 1: Standard Auto-Detect
+        try {
+            const resAuto = await fetchGoogleTranslate(rawText, 'auto', 'en', controller.signal);
+            if (resAuto.text && resAuto.text.toLowerCase() !== rawText.toLowerCase()) {
+                finalTranslated = resAuto.text;
+            }
+        } catch (e) {
+            console.warn('[Segmented Prompt] Pass 1 translation error:', e);
+        }
+
+        // Pass 2: Clause Chunking
+        // Mixed prompts like "she holding her sword, sementara dia memegang fan on her another hand"
+        // often fail auto-detection on the entire text because English words dominate.
+        // Chunking by comma / newline / semicolon lets Google auto-detect each clause individually.
+        if (!finalTranslated && (rawText.includes(',') || rawText.includes('\n') || rawText.includes(';'))) {
+            const delimiter = rawText.includes('\n') ? '\n' : (rawText.includes(';') ? ';' : ',');
+            const chunks = rawText.split(delimiter);
+            let anyChanged = false;
+            const translatedChunks = await Promise.all(chunks.map(async chunk => {
+                const trimmed = chunk.trim();
+                if (!trimmed) return chunk;
+                try {
+                    const r = await fetchGoogleTranslate(trimmed, 'auto', 'en', controller.signal);
+                    if (r.text && r.text.toLowerCase() !== trimmed.toLowerCase()) {
+                        anyChanged = true;
+                        return r.text;
+                    }
+                } catch (e) {}
+                return trimmed;
+            }));
+            if (anyChanged) {
+                finalTranslated = translatedChunks.join(delimiter === ',' ? ', ' : delimiter);
+            }
+        }
+
+        // Pass 3: Mixed Language Fallback (sl=id)
+        // If still unchanged (e.g. mixed Indonesian/English without punctuation delimiters),
+        // query with sl=id. Google's id->en NMT preserves existing English terms and translates
+        // embedded Indonesian phrases.
+        if (!finalTranslated) {
+            try {
+                const resId = await fetchGoogleTranslate(rawText, 'id', 'en', controller.signal);
+                if (resId.text && resId.text.toLowerCase() !== rawText.toLowerCase()) {
+                    finalTranslated = resId.text;
+                }
+            } catch (e) {
+                console.warn('[Segmented Prompt] Pass 3 translation error:', e);
+            }
+        }
+
         clearTimeout(timeoutId);
 
-        if (!response.ok) {
-            throw new Error(`Translation API HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-        let translatedText = '';
-
-        if (Array.isArray(data) && Array.isArray(data[0])) {
-            translatedText = data[0].map(chunk => (chunk && chunk[0] ? chunk[0] : '')).join('');
-        }
-
-        if (translatedText && translatedText.trim()) {
-            textEl.value = translatedText.trim();
+        if (finalTranslated && finalTranslated.trim()) {
+            textEl.value = finalTranslated.trim();
 
             // Dispatch bubbling events so Gradio state and persistence scripts capture the change
             textEl.dispatchEvent(new Event('input', { bubbles: true }));
@@ -76,8 +132,18 @@ async function translateSegmentText(prefix, idx, btn) {
             return;
         }
 
-        throw new Error('Empty or invalid translation payload');
+        // If completely unchanged, the prompt is already pure English
+        if (btn) {
+            btn.classList.remove('seg-btn-loading');
+            btn.textContent = '✅';
+            btn.title = 'Already in English';
+            setTimeout(() => {
+                btn.textContent = originalBtnContent;
+                btn.title = 'Translate to English (Auto-detect)';
+            }, 1200);
+        }
     } catch (err) {
+        clearTimeout(timeoutId);
         console.error('[Segmented Prompt] Translation error:', err);
         if (btn) {
             btn.classList.remove('seg-btn-loading');
@@ -414,4 +480,5 @@ window.refreshAllSummaries = refreshAllSummaries;
 window.autoResizeTextarea = autoResizeTextarea;
 window.autoResizeAllTextareas = autoResizeAllTextareas;
 window.translateSegmentText = translateSegmentText;
+window.fetchGoogleTranslate = fetchGoogleTranslate;
 window.fixWeightSliders = fixWeightSliders;
